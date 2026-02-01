@@ -40,16 +40,30 @@ class ListNamespace(Generic[T]):
         if key in ["_key", "_args"]:
             super().__setattr__(key, value)
             return self
-        key = format_attribute(key)
-        try:
-            getattr(self, key)
-        except AttributeError:
-            args = list(self._args)
-            args.append(value)
-            self._args = args
-            super().__setattr__(key, value)
+
+        # check if the key is already formatted (to avoid infinite recursion)
+        # format_attribute might change 'description' to 'description' or 'TBD' to 'TBD'
+        formatted_key = format_attribute(key)
+
+        # check if it already exists as an attribute
+        if hasattr(self, formatted_key):
+            # If it's one of the internal attributes, just set it
+            if formatted_key in ["_key", "_args"]:
+                super().__setattr__(formatted_key, value)
+                return self
+            # Otherwise, it's a duplicate key.
+            # We add it to the list of arguments but don't overwrite the attribute.
+            if value not in self._args:
+                self._args.append(value)
+            logger.warning(
+                f"object with attribute {self._key} = {formatted_key} already exists. "
+                "The first occurrence is kept as an attribute."
+            )
         else:
-            raise AttributeError(f"object with attribute {self._key} = {key} already exists.")
+            # New attribute
+            if value not in self._args:
+                self._args.append(value)
+            super().__setattr__(formatted_key, value)
         return self
 
     def as_list(self, key: str | None = None) -> list:
