@@ -1,0 +1,13 @@
+# Changes here will be overwritten by Copier
+_commit: 0.1.16
+_src_path: gh:12rambau/pypackage
+author_email: pulakesh.mid@gmail.com
+author_first_name: Pulakesh
+author_last_name: Pradhan
+author_orcid: ""
+creation_year: "2025"
+github_repo_name: stacgee
+github_user: pulakeshpradhan
+project_name: stacgee
+project_slug: stacgee
+short_description: Google Earth Engine STAC

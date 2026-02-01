@@ -1,0 +1,4 @@
+Usage
+=====
+
+**stacgee** usage documentation.
