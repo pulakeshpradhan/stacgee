@@ -66,3 +66,10 @@ from stacgee import stacindex
 pc = stacindex.planetary_computer()
 print(f"Catalog Title: {pc.title}")
 print(f"Catalog Version: {pc.version}")
+
+# Example 6: Custom STAC Catalog
+print("\n--- Example 6: Custom STAC Catalog ---")
+from stacgee import STACCatalog
+# California Forest Observatory
+cfo = STACCatalog("https://storage.googleapis.com/cfo-public/catalog.json")
+print(f"Catalog Title: {cfo.title}")
