@@ -59,25 +59,76 @@ Installation
 Usage
 -----
 
+**stacgee** provides a powerful way to interact with the Google Earth Engine STAC catalog. It can be used both to browse the catalog and to initialize GEE objects with rich metadata.
+
+GEE-like Initialization
+^^^^^^^^^^^^^^^^^^^^^^^
+
+You can initialize datasets using their familiar GEE Asset IDs:
+
+.. code-block:: python
+
+    import stacgee
+    import ee
+
+    # Initialize ImageCollection (works like ee.ImageCollection but with STAC metadata)
+    dw = stacgee.ImageCollection("GOOGLE/DYNAMICWORLD/V1")
+
+    # Access STAC-specific metadata
+    print(dw.start_date)
+    print(dw.status)  # e.g., "active" or "deprecated"
+
+    # Access underlying GEE object for computation
+    # stacgee objects proxy unknown methods to the underlying eeObject!
+    filtered = dw.filterDate('2023-01-01', '2023-01-02')
+    print(filtered.size().getInfo())
+
+Accessing Rich Metadata
+^^^^^^^^^^^^^^^^^^^^^^^
+
+One of the main strengths of **stacgee** is accessing information often "hidden" or hard to reach in GEE:
+
+**Class Information (Categorical Bands)**
+
+.. code-block:: python
+
+    # Get class names and colors for land cover datasets
+    label_band = dw.bands.label
+    for category in label_band.class_info:
+        print(f"{category.value}: {category.description}")
+
+**Bitmask Definitions (QA Bands)**
+
+.. code-block:: python
+
+    # Get human-readable bitmask definitions for quality bands
+    s2 = stacgee.ImageCollection("COPERNICUS/S2_SR")
+    qa_bits = s2.bands.QA60.bitmask.to_dict()
+
+**Scaling and Offsets**
+
+.. code-block:: python
+
+    # Get physical unit conversion factors
+    modis = stacgee.ImageCollection("MODIS/061/MOD11A1")
+    lst_band = modis.bands.LST_Day_1km
+    print(f"Scale: {lst_band.multiplier}, Offset: {lst_band.offset}")
+
+Browsing the Catalog
+^^^^^^^^^^^^^^^^^^^^
+
+You can also browse the catalog as a tree:
+
 .. code-block:: python
 
     from stacgee import eecatalog
 
-    # a lazy object does not contain the complete data but only the reference (name and url)
-    landsat_lazy = eecatalog.LANDSAT
+    # Explore available Landsat datasets
+    landsat = eecatalog.LANDSAT()
+    print(landsat.children.keys())
 
-    # to fetch all data you need to call it
-    landast = eecatalog.LANDSAT()
-
-    # if you do this in runtime, the `landsat` object contains all datasets as attributes
-    # if you don't do it in runtime you won't be able to see the datasets (attributes)
-
-    # it works the same with datasets
-    # lazy dataset
-    l9_lazy = landsat.LC09_C02_T1
-    # fetch L9 data
+    # Get a specific dataset
     l9 = landsat.LC09_C02_T1()
-
 
 Credits
 -------

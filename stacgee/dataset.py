@@ -106,6 +106,15 @@ class Dataset(STAC):
         """Earth Engine Object."""
         return self.eeType(self.assetId) if self.assetId else None
 
+    def __getattr__(self, name):
+        """Delegate to the Earth Engine object."""
+        try:
+            return super().__getattribute__(name)
+        except AttributeError:
+            if self.eeObject and hasattr(self.eeObject, name):
+                return getattr(self.eeObject, name)
+            raise
+
     @property
     def status(self) -> str | None:
         """Status of the Dataset."""
