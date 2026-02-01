@@ -2,7 +2,8 @@ import stacgee
 import ee
 
 # Initialize Earth Engine
-# ee.Initialize() # Uncomment and ensure you are authenticated
+ee.Authenticate()
+ee.Initialize(project='my-project')
 
 def print_dataset_info(dataset):
     print(f"Dataset: {dataset.name}")
