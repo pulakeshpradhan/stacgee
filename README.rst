@@ -61,6 +61,8 @@ Usage
 
 **stacgee** provides a powerful way to interact with the Google Earth Engine STAC catalog. It can be used both to browse the catalog and to initialize GEE objects with rich metadata.
 
+For a hands-on guide, check out the `Interactive Notebook Tutorial <examples/stacgee_tutorial.ipynb>`_.
+
 GEE-like Initialization
 ^^^^^^^^^^^^^^^^^^^^^^^
 
