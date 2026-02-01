@@ -56,3 +56,13 @@ print(f"Filtered GEE Object Type: {type(filtered)}")
 # Note: Computation returns native GEE objects.
 count = filtered.size().getInfo()
 print(f"Images found in range: {count}")
+
+# Example 5: Accessing non-GEE catalogs via STAC Index
+print("\n--- Example 5: Global STAC Catalogs ---")
+from stacgee import stacindex
+
+# Access Microsoft Planetary Computer via STAC Index
+# Note: stacindex contains many catalogs, some names might be slightly modified to be valid attributes
+pc = stacindex.planetary_computer()
+print(f"Catalog Title: {pc.title}")
+print(f"Catalog Version: {pc.version}")

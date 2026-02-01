@@ -36,33 +36,59 @@ class LazyDataset(STAC):
 
 
 class Catalog(STAC):
-    def __init__(self, href: str, name: str, parent):
+    def __init__(self, href: str, name: str, parent=None):
         """Catalog."""
         super(Catalog, self).__init__(href, name, parent)
         self.data = {}
-        self.children: ListNamespace[Union[Dataset, LazyDataset]] = ListNamespace(key="name")
+        self.children: ListNamespace[Union["Catalog", Dataset, LazyDataset]] = ListNamespace(
+            key="name"
+        )
 
     def __call__(self):
         """Fetch data."""
         if self.is_lazy():
             self.data = requests.get(self.href).json()
-            self._get_datasets()
+            self._parse_contents()
             self._lazy = False
         return self
 
-    def _get_datasets(self):
-        """Get all catalogs and set them as instance properties."""
+    def _parse_contents(self):
+        """Parse contents (links) of the catalog."""
         for link in self.data.get("links", []):
             if link["rel"] == "child":
-                name = link["title"].replace("-", "_")
-                if re.match(f"^{self.name}", name):
-                    name = name.replace(f"{self.name}_", "")
-                catalog = LazyDataset(link["href"], name, self)
-                self.children._append(catalog)
-                self.__setattr__(name, catalog)
+                href = link["href"]
+                # Try to get a title, fallback to id or filename
+                title = link.get("title") or link.get("id") or href.split("/")[-1].split(".")[0]
+                name = title.replace("-", "_").replace(" ", "_")
+
+                # Remove parent name prefix if exists
+                if self.name and re.match(f"^{self.name}", name):
+                    clean_name = name.replace(f"{self.name}_", "")
+                    if clean_name:
+                        name = clean_name
+
+                # Determine if it's a sub-catalog or a dataset
+                # This is a bit tricky without fetching, so we use LazyDataset
+                # which will decide upon being called.
+                item = LazyDataset(href, name, self)
+                self.children._append(item)
+                try:
+                    self.__setattr__(name, item)
+                except AttributeError:
+                    # In case of name collisions or invalid names
+                    pass
 
 
-class EECatalog(STAC):
+class STACCatalog(Catalog):
+    """A generic STAC Catalog that can be initialized from any STAC URL."""
+
+    def __init__(self, href: str, name: str | None = None):
+        if name is None:
+            name = href.split("/")[-1].split(".")[0]
+        super(STACCatalog, self).__init__(href, name)
+
+
+class EECatalog(Catalog):
     """Earth Engine STAC Catalog.
 
     This Catalog contains a set of Catalogs accessible via attributes.
@@ -75,20 +101,38 @@ class EECatalog(STAC):
     def __init__(self):
         """Earth Engine STAC Catalog."""
         super(EECatalog, self).__init__(self.base_url, "EECatalog")
-        # self.children = DictNamespace()
+        self.__call__()
+
+
+class STACIndex(STAC):
+    """STAC Index Catalog.
+
+    Fetches all public catalogs listed on stacindex.org.
+    """
+
+    api_url = "https://stacindex.org/api/catalogs"
+
+    def __init__(self):
+        """STAC Index."""
+        super(STACIndex, self).__init__(self.api_url, "STACIndex")
         self.children = ListNamespace(key="name")
-        self.data = requests.get(self.base_url).json()
+        self.data = requests.get(self.api_url).json()
         self._get_catalogs()
 
     def _get_catalogs(self):
-        """Get all catalogs and set them as instance properties."""
-        for link in self.data.get("links", []):
-            if link["rel"] == "child":
-                name = link["title"].replace("-", "_")
-                catalog = Catalog(link["href"], name, self)
-                if re.match(f"^{self.name}", name):
-                    name = name.replace(f"{self.name}_", "")
-                # setattr(self.children, name, catalog)
-                # self.children[name] = catalog
-                self.children._append(catalog)
+        """Parse catalogs from STAC Index API."""
+        for entry in self.data:
+            title = entry.get("title") or entry.get("slug")
+            name = title.replace("-", "_").replace(" ", "_").replace(".", "_")
+            href = entry.get("url")
+
+            if not href:
+                continue
+
+            # Create a generic STAC Catalog for each entry
+            catalog = Catalog(href, name, self)
+            self.children._append(catalog)
+            try:
                 self.__setattr__(name, catalog)
+            except AttributeError:
+                pass

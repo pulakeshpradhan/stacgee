@@ -4,12 +4,13 @@ __version__ = "0.0.1"
 __author__ = "Pulakesh Pradhan"
 __email__ = "pulakesh.mid@gmail.com"
 
-from .catalog import EECatalog
+from .catalog import EECatalog, STACCatalog, STACIndex
 from .feature_collection import FeatureCollection as _FeatureCollection
 from .image import Image as _Image
 from .image_collection import ImageCollection as _ImageCollection
 
 eecatalog = EECatalog()
+stacindex = STACIndex()
 
 
 def fromId(assetId: str):

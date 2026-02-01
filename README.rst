@@ -132,6 +132,25 @@ You can also browse the catalog as a tree:
     # Get a specific dataset
     l9 = landsat.LC09_C02_T1()
 
+Accessing Global STAC Catalogs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Beyond Google Earth Engine, you can access hundreds of public STAC catalogs via the **STAC Index** integration:
+
+.. code-block:: python
+
+    from stacgee import stacindex
+
+    # List all available catalogs on stacindex.org
+    print(stacindex.children.keys())
+
+    # Access a specific catalog (e.g., Microsoft Planetary Computer)
+    pc = stacindex.planetary_computer()
+    print(pc.description)
+
+    # Explore collections in that catalog
+    print(pc.children.keys())
+
 Credits
 -------
 Author: Pulakesh Pradhan
